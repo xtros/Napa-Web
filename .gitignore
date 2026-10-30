@@ -16,3 +16,6 @@ out
 .*temp*
 
 .vscode/*
+
+.vercel
+.env*
