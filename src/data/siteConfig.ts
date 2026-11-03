@@ -66,6 +66,10 @@ export type EventItem = {
   rewards: string[]
   accentColor: string
   badgeText: string
+  isDiscordEvent?: boolean
+  discordEventUrl?: string
+  interestedCount?: number
+  bannerUrl?: string
 }
 
 export type CocPerk = {
