@@ -53,6 +53,21 @@ export type HighlightBadge = {
   text: string
 }
 
+
+export type EventItem = {
+  id: string
+  title: string
+  subtitle: string
+  category: "PVP" | "PVE" | "COMMUNITY" | "BUILDING" | "ECONOMY"
+  status: "LIVE" | "UPCOMING" | "WEEKLY"
+  schedule: string
+  locationCommand: string
+  description: string
+  rewards: string[]
+  accentColor: string
+  badgeText: string
+}
+
 export type CocPerk = {
   title: string
   description: string
@@ -190,6 +205,7 @@ export const siteConfig = {
       theme: "tile-green",
       size: "md",
       layout: "stackBottom",
+      href: "/events",
       image: {
         src: "/assets/tiles/events_600x438.png",
         alt: "Events preview"
@@ -224,6 +240,98 @@ export const siteConfig = {
       artSize: "xs"
     }
   ] as TileConfig[],
+  
+  events: [
+    {
+      id: "dragon-void-raid",
+      title: "Weekly Ender Dragon Void Raid",
+      subtitle: "The End Resets! Slay the beast & seize rare loot.",
+      category: "PVE",
+      status: "WEEKLY",
+      schedule: "Every Saturday • 8:00 PM IST",
+      locationCommand: "/warp end",
+      description: "The End dimension undergoes a full dimensional reset every weekend. Gather your clan, defeat the resurrected Ender Dragon in a server-wide battle, claim the legendary Dragon Egg, and auction it or keep it as your trophy!",
+      rewards: [
+        "Legendary Dragon Egg",
+        "$15,000 In-Game Currency",
+        "2x Mythic Crate Keys",
+        "Rare Netherite Relics & Elytra"
+      ],
+      accentColor: "from-purple-600 to-indigo-600",
+      badgeText: "EVERY SATURDAY"
+    },
+    {
+      id: "spawn-drop-party",
+      title: "Spawn Drop Party & Coin Flip Frenzy",
+      subtitle: "Free supply crates, god gear & zero-tax coin flips.",
+      category: "COMMUNITY",
+      status: "WEEKLY",
+      schedule: "Every Sunday • 7:00 PM IST",
+      locationCommand: "/spawn",
+      description: "Join the whole server at Spawn for a massive celebration! Staff and top-ranked MVP/ELITE players shower the courtyard with God Apples, Totems, Diamonds, and Ancient Debris. Coin flips run with 0% server commission.",
+      rewards: [
+        "100+ Dropped Supply Bundles",
+        "Enchanted Golden Apples & Totems",
+        "Exclusive 'Lucky' In-Game Chat Tag",
+        "Spawners & Spawner Shards"
+      ],
+      accentColor: "from-emerald-500 to-teal-600",
+      badgeText: "EVERY SUNDAY"
+    },
+    {
+      id: "gladiator-pvp-tourney",
+      title: "1v1 Gladiator Arena Tournament",
+      subtitle: "Balanced loadout bracket knockout tournament.",
+      category: "PVP",
+      status: "UPCOMING",
+      schedule: "Every Alternate Friday • 9:00 PM IST",
+      locationCommand: "/warp arena",
+      description: "Enter the custom Colosseum arena for a single-elimination 1v1 PvP showdown. All participants receive matched tournament kits (Sword, Axe, Bow, Shield, Potions) so victory is determined 100% by skill, not gear.",
+      rewards: [
+        "1st Place: Free Rank Upgrade / MVP Rank + $50,000",
+        "2nd Place: VIP Rank + $25,000 Balance",
+        "3rd Place: 5x Legend Keys + $10,000 Balance"
+      ],
+      accentColor: "from-red-600 to-amber-600",
+      badgeText: "NEXT: THIS FRIDAY"
+    },
+    {
+      id: "season-build-showcase",
+      title: "Survival Megabase & Architecture Contest",
+      subtitle: "Show off your aesthetic base or redstone mega-factory.",
+      category: "BUILDING",
+      status: "LIVE",
+      schedule: "Season 2 Monthly Contest • Submissions Open",
+      locationCommand: "/discord (#base-showcase)",
+      description: "Construct the most impressive survival build, aesthetic village, or automated redstone mega-farm. Staff and community streamers will tour the top 5 bases live on stream and award custom spawn monuments to the winners.",
+      rewards: [
+        "Custom Golden Player Statue at Spawn",
+        "Exclusive 'Master Architect' Discord Role & Chat Tag",
+        "$100,000 Server Economy Treasury",
+        "Feature on Server Website Gallery"
+      ],
+      accentColor: "from-blue-600 to-cyan-500",
+      badgeText: "LIVE NOW"
+    },
+    {
+      id: "weekend-economy-boost",
+      title: "Weekend 2x Sell Multiplier Frenzy",
+      subtitle: "Double your earnings on all crops, ores & mob drops.",
+      category: "ECONOMY",
+      status: "WEEKLY",
+      schedule: "Friday 6 PM – Sunday 11:59 PM IST",
+      locationCommand: "/shop",
+      description: "Take advantage of boosted server-wide market rates! All /shop sell earnings are boosted by an additional 1.5x to 2x, and Auction House listing durations are doubled with 50% reduced listing fees.",
+      rewards: [
+        "2x Shop Sell Payouts on All Resources",
+        "50% Reduced Auction House (/ah) Taxes",
+        "+25% Extra Mob Grinder Exp"
+      ],
+      accentColor: "from-amber-500 to-yellow-600",
+      badgeText: "WEEKEND SURGE"
+    }
+  ],
+
   ranks: {
     headline: "Server Ranks & Economy Perks",
     description:
@@ -411,6 +519,7 @@ export const siteConfig = {
       { label: "Minecraft SMP", href: "/home" },
       { label: "Clash of Clans", href: "/coc" },
       { label: "Ranks Store", href: "/ranks" },
+      { label: "Server Events", href: "/events" },
       { label: "Admin Panel", href: "/admin" },
       { label: "Discord Community", href: "https://dsc.gg/napa" }
     ]
