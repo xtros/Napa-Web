@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     }
 
     // If order is active/manual_review, poll gateway if paymentId is registered
-    if (order.status !== "COMPLETED" && order.status !== "FAILED" && order.paymentId) {
+    if (order.status !== "COMPLETED" && order.status !== "FAILED" && order.status !== "EXPIRED" && order.paymentId) {
       const config = getYoupiConfig()
       try {
         const res = await fetch(`${config.apiUrl}/api/v1/payments/${order.paymentId}`, {
@@ -49,13 +49,24 @@ export async function GET(req: Request) {
             order = updateYoupiOrderStatus(order.orderId, "MANUAL_REVIEW", {
               utr: gwData.utr || order.utr || undefined
             })
-          } else if (gwData.status === "FAILED" || gwData.status === "EXPIRED") {
+          } else if (gwData.status === "EXPIRED") {
+            order = updateYoupiOrderStatus(order.orderId, "EXPIRED")
+          } else if (gwData.status === "FAILED") {
             order = updateYoupiOrderStatus(order.orderId, "FAILED")
           }
         }
       } catch (err) {
         // Gateway poll timeout or offline; return current cached state
       }
+    }
+
+    // Fallback: If order is still ACTIVE without UTR, and > 5 minutes have elapsed, mark as EXPIRED
+    if (
+      order.status === "ACTIVE" &&
+      !order.utr &&
+      Date.now() - new Date(order.createdAt).getTime() > 300_000
+    ) {
+      order = updateYoupiOrderStatus(order.orderId, "EXPIRED")
     }
 
     return NextResponse.json({

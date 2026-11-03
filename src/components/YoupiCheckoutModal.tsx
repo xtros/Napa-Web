@@ -11,7 +11,7 @@ interface YoupiCheckoutModalProps {
 }
 
 export default function YoupiCheckoutModal({ product, open, onClose }: YoupiCheckoutModalProps) {
-  const [step, setStep] = useState<"USERNAME" | "PAYMENT" | "SUCCESS">("USERNAME")
+  const [step, setStep] = useState<"USERNAME" | "PAYMENT" | "SUCCESS" | "EXPIRED" | "FAILED">("USERNAME")
   const [username, setUsername] = useState("")
   const [phone, setPhone] = useState("")
   const [loading, setLoading] = useState(false)
@@ -40,16 +40,30 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
 
   // Countdown timer for active checkout session
   useEffect(() => {
-    if (step !== "PAYMENT" || timeLeft <= 0) return
+    if (step !== "PAYMENT") return
+    if (timeLeft <= 0) {
+      if (order?.status !== "MANUAL_REVIEW" && !order?.utr) {
+        setStep("EXPIRED")
+      }
+      return
+    }
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0))
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (order?.status !== "MANUAL_REVIEW" && !order?.utr) {
+            setStep("EXPIRED")
+          }
+          return 0
+        }
+        return prev - 1
+      })
     }, 1000)
     return () => clearInterval(timer)
-  }, [step, timeLeft])
+  }, [step, timeLeft, order])
 
   // Real-time polling for order status
   const pollOrderStatus = useCallback(async () => {
-    if (!order || step !== "PAYMENT") return
+    if (!order || (step !== "PAYMENT" && step !== "EXPIRED")) return
 
     try {
       const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(order.orderId)}`)
@@ -59,6 +73,10 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
           setOrder(data.order)
           if (data.order.status === "COMPLETED") {
             setStep("SUCCESS")
+          } else if (data.order.status === "EXPIRED" && !data.order.utr) {
+            setStep("EXPIRED")
+          } else if (data.order.status === "FAILED") {
+            setStep("FAILED")
           }
         }
       }
@@ -66,10 +84,19 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
   }, [order, step])
 
   useEffect(() => {
-    if (step !== "PAYMENT") return
+    if (step !== "PAYMENT" && step !== "EXPIRED") return
     const interval = setInterval(pollOrderStatus, 3000)
     return () => clearInterval(interval)
   }, [step, pollOrderStatus])
+
+  const handleRetry = () => {
+    setStep("USERNAME")
+    setOrder(null)
+    setUtrInput("")
+    setUtrMessage(null)
+    setError(null)
+    setTimeLeft(300)
+  }
 
   if (!open || !product) return null
 
@@ -197,6 +224,10 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
               <h3 className="text-lg font-bold uppercase tracking-wide text-white mt-0.5">
                 {step === "SUCCESS"
                   ? "Order Completed!"
+                  : step === "EXPIRED"
+                  ? "Payment Window Expired"
+                  : step === "FAILED"
+                  ? "Payment Failed"
                   : `Unlock ${product.name} Rank (${product.price})`}
               </h3>
             </div>
@@ -488,6 +519,87 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
               >
                 Join Discord
               </a>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: Session Expired / Failed */}
+        {(step === "EXPIRED" || step === "FAILED") && order && (
+          <div className="space-y-5 py-2 text-center animate-in fade-in duration-200">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.2)]">
+              <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+
+            <div>
+              <h4 className="text-xl font-bold uppercase tracking-wider text-white">
+                {step === "EXPIRED" ? "Payment Window Expired" : "Payment Not Completed"}
+              </h4>
+              <p className="text-xs text-white/70 max-w-sm mx-auto mt-1">
+                The 5-minute active UPI slot reservation for order{" "}
+                <span className="font-mono text-purple-300 font-bold">{order.orderId}</span> has expired to free the receiver for other players.
+              </p>
+            </div>
+
+            {/* If paid before timeout, allow submitting UTR */}
+            <div className="rounded-xl border border-line bg-midnight p-4 text-left space-y-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                <span className="h-2 w-2 rounded-full bg-accentSoft inline-block" />
+                <span>Did you already pay before the time ran out?</span>
+              </div>
+              <p className="text-[11px] text-white/60">
+                If money was deducted from your UPI app, don't worry! Enter your 12-digit bank UTR below. The server admins will verify the bank transaction and manually deliver your rank.
+              </p>
+
+              <form onSubmit={handleClaimUtr} className="flex gap-2">
+                <input
+                  type="text"
+                  maxLength={12}
+                  className="input-field font-mono text-xs uppercase"
+                  placeholder="Enter 12-digit Bank UTR"
+                  value={utrInput}
+                  onChange={(e) => setUtrInput(e.target.value.replace(/[^0-9]/g, ""))}
+                />
+                <button
+                  type="submit"
+                  disabled={submittingUtr || utrInput.length !== 12}
+                  className="primary-button text-xs uppercase tracking-wider px-4 flex-shrink-0 disabled:opacity-50"
+                >
+                  {submittingUtr ? "..." : "Claim UTR"}
+                </button>
+              </form>
+
+              {utrMessage && (
+                <div className="rounded-lg bg-emerald/10 border border-emerald/20 p-2 text-[11px] text-emerald flex items-center gap-1.5">
+                  <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>{utrMessage}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Actions: Start New Payment or Close */}
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                className="ghost-button flex-1 text-xs uppercase tracking-widest py-3"
+                onClick={onClose}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="primary-button flex-1 text-xs uppercase tracking-widest py-3 flex items-center justify-center gap-1.5 font-bold"
+                onClick={handleRetry}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <span>Start New Payment</span>
+              </button>
             </div>
           </div>
         )}

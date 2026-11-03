@@ -11,3 +11,4 @@ db.exec(`
 `);
 console.log('Receiving Accounts:', db.prepare('SELECT id, upi_id, payee_name FROM payment_receiving_accounts').all());
 console.log('Merchants:', db.prepare('SELECT id, business_name, slug FROM merchants').all());
+
