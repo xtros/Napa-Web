@@ -57,6 +57,25 @@ function detectCategory(name: string, desc: string): "PVP" | "PVE" | "COMMUNITY"
   return "COMMUNITY"
 }
 
+function isDateLine(line: string): boolean {
+  const l = line.toLowerCase()
+  return l.includes("📅") || l.includes("⏰") || l.startsWith("date") || l.startsWith("time")
+}
+
+function isRewardLine(line: string): boolean {
+  const l = line.toLowerCase()
+  return (
+    l.includes("🥇") ||
+    l.includes("🥈") ||
+    l.includes("🥉") ||
+    l.includes("🏆") ||
+    l.includes("prize") ||
+    l.includes("reward") ||
+    l.includes("pool") ||
+    /^\d+(st|nd|rd|th)\s*prize/i.test(line)
+  )
+}
+
 function parseChannelAnnouncement(msg: DiscordMessage, guildId: string): EventItem | null {
   const raw = msg.content || ""
   // Strip user / role mentions like <@&1504136807527219281>
@@ -81,29 +100,25 @@ function parseChannelAnnouncement(msg: DiscordMessage, guildId: string): EventIt
   // Extract banner
   const bannerUrl = msg.attachments?.[0]?.url || msg.embeds?.[0]?.image?.url || "/assets/tiles/events_600x438.png"
 
-  // Extract title
+  // 1. Extract title (first line)
   let title = "NAPA Community Event"
-  let subtitle = "Announced in #event-announcements"
-
   if (lines[0]) {
     title = lines[0]
-      .replace(/^[#*🌼🚣🏆⚔️🔥🌸\s]+|[#*🌼🚣🏆⚔️🔥🌸\s]+$/g, "")
+      .replace(/^[#*🌼🚣🏆⚔️🔥🌸👥🎮👑\s]+|[#*🌼🚣🏆⚔️🔥🌸👥🎮👑\s]+$/g, "")
       .replace(/^napa presents\s*[:—–-]\s*/i, "")
       .trim()
   }
 
-  if (lines[1] && (lines[1].includes("PRESENT") || lines[1].includes("—") || lines[1].includes(":"))) {
-    subtitle = lines[1].replace(/^[#*🌼🚣🏆⚔️🔥🌸\s]+|[#*🌼🚣🏆⚔️🔥🌸\s]+$/g, "").trim()
-  }
-
-  // Extract schedule / date
+  // 2. Extract schedule / date
   let schedule = ""
-  const dateLine = lines.find(l => l.includes("📅") || l.toLowerCase().includes("date:"))
-  const timeLine = lines.find(l => l.includes("⏰") || l.toLowerCase().includes("time:"))
+  const dateLine = lines.find(l => l.includes("📅") || l.toLowerCase().startsWith("date"))
+  const timeLine = lines.find(l => l.includes("⏰") || l.toLowerCase().startsWith("time"))
   if (dateLine) {
     const cleanDate = dateLine.replace(/^[#*📅\s]+|[#*\s]+$/g, "").replace(/^date\s*[:—–-]\s*/i, "").replace(/\*\*/g, "").trim()
     const cleanTime = timeLine ? timeLine.replace(/^[#*⏰\s]+|[#*\s]+$/g, "").replace(/^time\s*[:—–-]\s*/i, "").replace(/\*\*/g, "").trim() : ""
     schedule = cleanTime ? `${cleanDate} • ${cleanTime}` : cleanDate
+  } else if (timeLine) {
+    schedule = timeLine.replace(/^[#*⏰\s]+|[#*\s]+$/g, "").replace(/^time\s*[:—–-]\s*/i, "").replace(/\*\*/g, "").trim()
   } else {
     try {
       const d = new Date(msg.timestamp)
@@ -113,32 +128,39 @@ function parseChannelAnnouncement(msg: DiscordMessage, guildId: string): EventIt
     }
   }
 
-  // Extract rewards
-  const rewardLines = lines.filter(l => 
-    l.includes("🥇") || l.includes("🥈") || l.includes("🥉") || 
-    l.toLowerCase().includes("prize") || l.toLowerCase().includes("pool")
-  ).map(l => l.replace(/^[#*\s]+|[#*\s]+$/g, "").replace(/\*\*/g, ""))
+  // 3. Extract rewards (lines mentioning prizes / podiums / rewards)
+  const rewardLines = lines
+    .filter(isRewardLine)
+    .map(l => l.replace(/^[#*\s]+|[#*\s]+$/g, "").replace(/\*\*/g, "").trim())
+    .filter(Boolean)
 
   const rewards = rewardLines.length > 0
-    ? rewardLines.slice(0, 4)
+    ? rewardLines.slice(0, 5)
     : ["In-Game Coins & Currency", "Exclusive Discord Event Role", "Server Prestige & Keys"]
 
-  // Build clean description
-  const descParagraphs = lines.filter(l => 
-    !l.startsWith("#") && 
-    !l.includes("📅") && 
-    !l.includes("⏰") && 
-    !l.includes("🥇") && 
-    !l.includes("🥈") && 
-    !l.includes("🥉") &&
-    l !== lines[0] &&
-    l !== lines[1]
-  )
-  const description = descParagraphs.length > 0 
-    ? descParagraphs.slice(0, 3).join(" ").replace(/\*\*/g, "")
-    : "Official NAPA SMP community event announced in Discord."
+  // 4. Extract subtitle & description (remaining lines that are not title, not dates, not rewards)
+  const bodyLines = lines.filter((l, index) => {
+    if (index === 0) return false // title line
+    if (isDateLine(l)) return false // date/time line
+    if (isRewardLine(l)) return false // prize line
+    return true
+  })
 
-  const category = detectCategory(title, description)
+  let subtitle = "Official Discord Announcement"
+  let description = "Official NAPA SMP community event announced in Discord. Join the server to participate!"
+
+  if (bodyLines.length === 1) {
+    description = bodyLines[0].replace(/\*\*/g, "").trim()
+  } else if (bodyLines.length > 1) {
+    if (bodyLines[0].length < 80 && !bodyLines[0].includes(".")) {
+      subtitle = bodyLines[0].replace(/^[#*🌼🚣🏆⚔️🔥🌸\s]+|[#*🌼🚣🏆⚔️🔥🌸\s]+$/g, "").trim()
+      description = bodyLines.slice(1).join("\n").replace(/\*\*/g, "").trim()
+    } else {
+      description = bodyLines.join("\n").replace(/\*\*/g, "").trim()
+    }
+  }
+
+  const category = detectCategory(title, `${subtitle} ${description}`)
   const jumpUrl = `https://discord.com/channels/${guildId}/${msg.channel_id}/${msg.id}`
 
   return {
