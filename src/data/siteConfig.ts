@@ -406,7 +406,7 @@ export const siteConfig = {
   footer: {
     copyright: "Copyright 2026 NAPA. All Rights Reserved. We do not have affiliation with any real world brands.",
     legal:
-      "This website and its checkout process is owned & operated by Tebex Limited, who handle product fulfillment, billing support and refunds.",
+      "Rank purchases and checkout are powered by YouPI Payment Gateway (0% platform fees, direct-to-bank UPI settlement). Product fulfillment and in-game rank delivery are handled automatically by NAPA SMP.",
     links: [
       { label: "Minecraft SMP", href: "/home" },
       { label: "Clash of Clans", href: "/coc" },
