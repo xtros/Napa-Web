@@ -150,143 +150,177 @@ export default function EventsPage() {
           ))}
         </section>
 
-        {/* Events Grid */}
-        <section className="grid gap-6 md:grid-cols-2">
-          {filteredEvents.map((ev) => (
-            <div
-              key={ev.id}
-              className={`panel-card group relative overflow-hidden p-6 sm:p-8 flex flex-col justify-between border transition-all duration-300 ${
-                ev.isDiscordEvent 
-                  ? "border-purple-500/50 shadow-[0_0_40px_rgba(139,92,246,0.18)] hover:border-purple-400" 
-                  : "border-line hover:border-purple-500/40 hover:shadow-[0_0_35px_rgba(139,92,246,0.12)]"
-              }`}
-            >
-              <div className="space-y-4">
-                {/* Header Tags */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${
-                      ev.status === "LIVE"
-                        ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 animate-pulse"
-                        : ev.isDiscordEvent
-                        ? "bg-purple-500/20 border border-purple-500/40 text-purple-300"
-                        : "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300"
-                    }`}>
-                      {ev.badgeText}
-                    </span>
-
-                    {ev.isDiscordEvent && (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-[#5865F2]/20 border border-[#5865F2]/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#98a1f8]">
-                        💬 Discord Event
-                      </span>
-                    )}
-                  </div>
-
-                  <span className="text-[11px] font-mono uppercase tracking-widest text-white/50">
-                    {ev.category}
-                  </span>
-                </div>
-
-                {/* Event Title */}
-                <div>
-                  <h3 className="text-xl font-bold uppercase tracking-wide text-white group-hover:text-purple-300 transition-colors">
-                    {ev.title}
-                  </h3>
-                  <p className="text-xs text-purple-300 font-medium mt-1">
-                    {ev.subtitle}
-                  </p>
-                </div>
-
-                {/* Schedule & Warp Pill */}
-                <div className="grid gap-2 sm:grid-cols-2 pt-1 text-xs">
-                  <div className="flex items-center gap-2 rounded-xl bg-midnight/90 border border-line p-2.5 text-white/80">
-                    <svg className="h-4 w-4 text-purple-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    <span className="truncate font-semibold">{ev.schedule}</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleCopyCommand(ev.locationCommand)}
-                    className="flex items-center justify-between gap-2 rounded-xl bg-midnight/90 border border-line p-2.5 text-accentSoft hover:border-accentSoft/50 transition-all cursor-pointer font-mono text-xs"
-                    title="Click to copy in-game command"
-                  >
-                    <span className="truncate font-bold">
-                      {copiedCmd === ev.locationCommand ? "✓ Copied!" : ev.locationCommand}
-                    </span>
-                    <svg className="h-3.5 w-3.5 text-white/40 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Description */}
-                <p className="text-xs leading-relaxed text-white/70">
-                  {ev.description}
-                </p>
-
-                {/* Rewards List */}
-                <div className="rounded-2xl border border-line/70 bg-midnight/60 p-4 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 block">
-                    🏆 Featured Event Rewards:
-                  </span>
-                  <ul className="grid gap-1.5 text-xs text-white/85">
-                    {ev.rewards.map((reward, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-purple-400 flex-shrink-0" />
-                        <span>{reward}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Bottom Quick Action */}
-              <div className="pt-6 border-t border-line/50 mt-6 flex items-center justify-between">
-                {ev.interestedCount && ev.interestedCount > 0 ? (
-                  <span className="text-[11px] text-purple-300 font-semibold">
-                    👥 {ev.interestedCount} players marked interested
-                  </span>
-                ) : (
-                  <span className="text-[11px] text-white/40">
-                    Open to all active players
-                  </span>
-                )}
-
-                {ev.discordEventUrl ? (
-                  <a
-                    href={ev.discordEventUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#858df3] hover:text-[#b4bbfb] transition-colors"
-                  >
-                    <span>RSVP on Discord</span>
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </a>
-                ) : (
-                  <a
-                    href="https://dsc.gg/napa"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 transition-colors"
-                  >
-                    <span>Event Discussion</span>
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </a>
-                )}
-              </div>
+        {/* Events Grid or Clean Empty State */}
+        {filteredEvents.length === 0 ? (
+          <div className="panel-card p-12 sm:p-16 text-center border border-line/60 rounded-3xl bg-midnight/60 space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
             </div>
-          ))}
-        </section>
+            <h3 className="text-xl font-bold uppercase tracking-wider text-white">
+              No Active Events Right Now
+            </h3>
+            <p className="text-xs text-white/60 max-w-md mx-auto leading-relaxed">
+              All events are currently cleared. As soon as a new event is announced in <span className="text-purple-300 font-semibold">#「🟣┃ᴇᴠᴇɴᴛ-ᴀɴɴᴏɴᴄᴇᴍᴇɴᴛ</span> on Discord, it will sync and display here automatically!
+            </p>
+            <div className="pt-2">
+              <a
+                href="https://dsc.gg/napa"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-600/25 hover:from-purple-500 hover:to-indigo-500 transition-all cursor-pointer"
+              >
+                <span>Join Discord Announcements</span>
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        ) : (
+          <section className="grid gap-6 md:grid-cols-2">
+            {filteredEvents.map((ev) => (
+              <div
+                key={ev.id}
+                className={`panel-card group relative overflow-hidden p-6 sm:p-8 flex flex-col justify-between border transition-all duration-300 ${
+                  ev.isDiscordEvent 
+                    ? "border-purple-500/50 shadow-[0_0_40px_rgba(139,92,246,0.18)] hover:border-purple-400" 
+                    : "border-line hover:border-purple-500/40 hover:shadow-[0_0_35px_rgba(139,92,246,0.12)]"
+                }`}
+              >
+                <div className="space-y-4">
+                  {/* Header Tags */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${
+                        ev.status === "LIVE"
+                          ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 animate-pulse"
+                          : ev.isDiscordEvent
+                          ? "bg-purple-500/20 border border-purple-500/40 text-purple-300"
+                          : "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300"
+                      }`}>
+                        {ev.badgeText}
+                      </span>
+
+                      {ev.isDiscordEvent && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-[#5865F2]/20 border border-[#5865F2]/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#98a1f8]">
+                          💬 Discord Event
+                        </span>
+                      )}
+                    </div>
+
+                    <span className="text-[11px] font-mono uppercase tracking-widest text-white/50">
+                      {ev.category}
+                    </span>
+                  </div>
+
+                  {/* Event Title */}
+                  <div>
+                    <h3 className="text-xl font-bold uppercase tracking-wide text-white group-hover:text-purple-300 transition-colors">
+                      {ev.title}
+                    </h3>
+                    <p className="text-xs text-purple-300 font-medium mt-1">
+                      {ev.subtitle}
+                    </p>
+                  </div>
+
+                  {/* Schedule & Warp Pill */}
+                  <div className="grid gap-2 sm:grid-cols-2 pt-1 text-xs">
+                    <div className="flex items-center gap-2 rounded-xl bg-midnight/90 border border-line p-2.5 text-white/80">
+                      <svg className="h-4 w-4 text-purple-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      <span className="truncate font-semibold">{ev.schedule}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopyCommand(ev.locationCommand)}
+                      className="flex items-center justify-between gap-2 rounded-xl bg-midnight/90 border border-line p-2.5 text-accentSoft hover:border-accentSoft/50 transition-all cursor-pointer font-mono text-xs"
+                      title="Click to copy in-game command"
+                    >
+                      <span className="truncate font-bold">
+                        {copiedCmd === ev.locationCommand ? "✓ Copied!" : ev.locationCommand}
+                      </span>
+                      <svg className="h-3.5 w-3.5 text-white/40 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-xs leading-relaxed text-white/70">
+                    {ev.description}
+                  </p>
+
+                  {/* Rewards List */}
+                  <div className="rounded-2xl border border-line/70 bg-midnight/60 p-4 space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 block">
+                      🏆 Featured Event Rewards:
+                    </span>
+                    <ul className="grid gap-1.5 text-xs text-white/85">
+                      {ev.rewards.map((reward, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-purple-400 flex-shrink-0" />
+                          <span>{reward}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Bottom Quick Action */}
+                <div className="pt-6 border-t border-line/50 mt-6 flex items-center justify-between">
+                  {ev.interestedCount && ev.interestedCount > 0 ? (
+                    <span className="text-[11px] text-purple-300 font-semibold">
+                      👥 {ev.interestedCount} players marked interested
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-white/40">
+                      Open to all active players
+                    </span>
+                  )}
+
+                  {ev.discordEventUrl ? (
+                    <a
+                      href={ev.discordEventUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#858df3] hover:text-[#b4bbfb] transition-colors"
+                    >
+                      <span>RSVP on Discord</span>
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </a>
+                  ) : (
+                    <a
+                      href="https://dsc.gg/napa"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 transition-colors"
+                    >
+                      <span>Event Discussion</span>
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
 
         {/* Weekly Event Roadmap Table */}
         <section className="panel-card p-6 sm:p-8 space-y-6 border border-line">

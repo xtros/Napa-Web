@@ -63,8 +63,15 @@ function parseChannelAnnouncement(msg: DiscordMessage, guildId: string): EventIt
   const cleaned = raw.replace(/<@&?\d+>/g, "").trim()
   const lines = cleaned.split("\n").map(l => l.trim()).filter(Boolean)
 
+  // Skip past / historical announcements older than 7 days so past events stay cleared
+  const msgTime = new Date(msg.timestamp).getTime()
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  if (msgTime < sevenDaysAgo) {
+    return null
+  }
+
   // Skip standalone "EVENT OVER" or thank you recap messages from the main event feed
-  if (cleaned.toLowerCase().startsWith("# event over") || cleaned.toLowerCase() === "event over") {
+  if (cleaned.toLowerCase().includes("event over") || cleaned.toLowerCase().includes("tournament ended")) {
     return null
   }
   if (lines.length === 0 && (!msg.attachments || msg.attachments.length === 0)) {
