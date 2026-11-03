@@ -232,7 +232,7 @@ export const siteConfig = {
       {
         id: "vip",
         name: "VIP",
-        price: "80/-",
+        price: "1/-",
         accent: "rank-vip",
         badge: "STARTER",
         skinImage: "/assets/ranks/skin_vip_v2.png",
