@@ -397,19 +397,31 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-[11px] text-white/50 pt-1">
+              <div className="flex flex-wrap items-center justify-between text-[11px] text-white/50 pt-1 gap-2">
                 <span className="flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full bg-emerald animate-ping inline-block" />
                   <span>Auto-detecting payment via YouPI...</span>
                 </span>
-                <a
-                  href={`/order-status?order_id=${order.orderId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-accentSoft hover:underline"
-                >
-                  View Order Status ↗
-                </a>
+                <div className="flex items-center gap-3">
+                  {order.checkoutUrl && (
+                    <a
+                      href={order.checkoutUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-purple-300 hover:underline"
+                    >
+                      Open in YouPI Portal ↗
+                    </a>
+                  )}
+                  <a
+                    href={`/order-status?order_id=${order.orderId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-accentSoft hover:underline"
+                  >
+                    View Status ↗
+                  </a>
+                </div>
               </div>
             </form>
           </div>

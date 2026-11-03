@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { claimYoupiUtr } from "@/lib/youpi"
+import { claimYoupiUtr, getYoupiConfig } from "@/lib/youpi"
 
 export const dynamic = "force-dynamic"
 
@@ -23,6 +23,21 @@ export async function POST(req: Request) {
     }
 
     const order = claimYoupiUtr(orderId.trim(), utr.trim())
+
+    // Forward UTR submission to YouPI PG Backend so it updates the Admin Operations Hub
+    if (order.paymentId) {
+      const config = getYoupiConfig()
+      try {
+        await fetch(`${config.apiUrl}/api/v1/checkout/${order.paymentId}/manual-utr`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ utr: order.utr }),
+          signal: AbortSignal.timeout(2000)
+        })
+      } catch (e) {
+        // Continue even if backend call fails; local order is marked MANUAL_REVIEW
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -136,6 +136,7 @@ export async function createYoupiOrder(params: {
         amount: `${amount}.00`,
         currency: "INR",
         returnUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/order-status?order_id=${orderId}`,
+        autoActivate: true,
         customer: {
           fullName: username,
           phoneNumber: params.customerPhone || ""
@@ -147,7 +148,7 @@ export async function createYoupiOrder(params: {
           platform: "NAPA SMP Web"
         }
       }),
-      signal: AbortSignal.timeout(2500)
+      signal: AbortSignal.timeout(4000)
     })
 
     if (res.ok) {
@@ -155,10 +156,13 @@ export async function createYoupiOrder(params: {
       if (data.paymentId) paymentId = data.paymentId
       if (data.checkoutUrl) checkoutUrl = data.checkoutUrl
       if (data.status) status = data.status as OrderStatus
+      console.log(`[YouPI PG] Successfully created & activated payment session ${paymentId} for order ${orderId}`)
+    } else {
+      const errText = await res.text()
+      console.error(`[YouPI PG API Error ${res.status}]:`, errText)
     }
-  } catch (err) {
-    // YouPI PG server may be running on a different port or in offline mode:
-    // Proceed seamlessly with native standalone UPI QR generation.
+  } catch (err: any) {
+    console.warn(`[YouPI PG] Gateway unreachable (${err?.message}). Running in standalone mode.`)
   }
 
   // Generate authentic UPI Deep Link and QR Code
