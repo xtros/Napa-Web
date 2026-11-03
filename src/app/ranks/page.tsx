@@ -14,7 +14,7 @@ export default function RanksPage() {
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-950/50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                YouPI-PG Active • Instant Direct UPI
+                NAPA Pay Active • Instant Direct UPI
               </span>
             </div>
             <h1 className="mt-3 font-display text-2xl sm:text-4xl uppercase tracking-wider text-white">

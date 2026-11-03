@@ -99,7 +99,7 @@ export default function AdminPage() {
             <div className="text-xs uppercase tracking-widest text-white text-opacity-60">Admin Console</div>
             <h1 className="mt-1 text-2xl font-semibold uppercase tracking-widest text-white">Dashboard</h1>
             <p className="mt-1 text-xs text-white text-opacity-70">
-              Manage NAPA SMP Store settings and real-time YouPI Payment Gateway orders.
+              Manage NAPA SMP Store settings and real-time NAPA Pay Gateway orders.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -123,7 +123,7 @@ export default function AdminPage() {
                 : "border-transparent text-white/60 hover:text-white"
             }`}
           >
-            <span>YouPI Gateway Orders</span>
+            <span>NAPA Pay Gateway Orders</span>
             {pendingClaims > 0 && (
               <span className="rounded-full bg-amber-500 text-black px-2 py-0.2 text-[10px] font-extrabold animate-pulse">
                 {pendingClaims} PENDING
@@ -142,7 +142,7 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* TAB 1: YouPI Payment Gateway Orders */}
+        {/* TAB 1: NAPA Pay Gateway Orders */}
         {activeTab === "orders" && (
           <div className="space-y-6">
             {/* KPI Cards */}
@@ -290,7 +290,7 @@ export default function AdminPage() {
             {/* Gateway Integration Info Panel */}
             <div className="rounded-2xl border border-line bg-midnight p-5 space-y-3 text-xs">
               <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-                YouPI PG Gateway Configuration
+                NAPA Pay Gateway Configuration
               </h4>
               <div className="grid gap-2 sm:grid-cols-3 font-mono text-[11px] text-white/70">
                 <div>

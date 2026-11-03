@@ -85,7 +85,7 @@ function OrderStatusContent() {
       {/* Search Header */}
       <div className="panel-card p-6 space-y-4 text-center">
         <span className="text-xs uppercase tracking-widest text-accentSoft font-bold">
-          YouPI Payment Gateway
+          NAPA Pay Gateway
         </span>
         <h1 className="text-2xl font-bold uppercase tracking-wide text-white">
           Order & Payment Status

@@ -149,7 +149,7 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
         }
       }
     } catch (err: any) {
-      setError(err.message || "Failed to connect to YouPI Payment Gateway")
+      setError(err.message || "Failed to connect to NAPA Pay")
     } finally {
       setLoading(false)
     }
@@ -217,7 +217,7 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  YouPI Gateway
+                  NAPA Pay
                 </span>
                 <span className="text-[10px] text-white/50 tracking-wider">0% FEES • DIRECT UPI</span>
               </div>
@@ -309,7 +309,7 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                  <span>Connecting YouPI Gateway...</span>
+                  <span>Connecting NAPA Pay...</span>
                 </>
               ) : (
                 <>
@@ -431,7 +431,7 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
               <div className="flex flex-wrap items-center justify-between text-[11px] text-white/50 pt-1 gap-2">
                 <span className="flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full bg-emerald animate-ping inline-block" />
-                  <span>Auto-detecting payment via YouPI...</span>
+                  <span>Auto-detecting payment via NAPA Pay...</span>
                 </span>
                 <div className="flex items-center gap-3">
                   {order.checkoutUrl && (
@@ -441,7 +441,7 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
                       rel="noreferrer"
                       className="text-purple-300 hover:underline"
                     >
-                      Open in YouPI Portal ↗
+                      Open in NAPA Pay Portal ↗
                     </a>
                   )}
                   <a
