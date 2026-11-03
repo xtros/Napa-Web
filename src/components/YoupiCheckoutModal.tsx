@@ -483,3 +483,4 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
     </div>
   )
 }
+

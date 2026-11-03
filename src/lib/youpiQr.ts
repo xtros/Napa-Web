@@ -41,3 +41,4 @@ export function generateQrSvg(text: string, boxSize: number = 240, errorCorrecti
   ${rects}
 </svg>`
 }
+

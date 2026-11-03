@@ -306,3 +306,4 @@ export function verifyYoupiWebhookSignature(
 
   return false
 }
+
