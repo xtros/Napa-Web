@@ -127,27 +127,15 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
       }
 
       setOrder(data.order)
+
+      // Automatically redirect to NAPA Pay portal
+      if (data.order?.checkoutUrl) {
+        window.location.href = data.order.checkoutUrl
+        return
+      }
+
       setStep("PAYMENT")
       setTimeLeft(300)
-
-      // If official Youpi SDK script is available on window, try invoking it
-      if (typeof window !== "undefined" && (window as any).Youpi?.pay) {
-        try {
-          ;(window as any).Youpi.pay({
-            orderId: data.order.orderId,
-            amount: data.order.amount,
-            currency: "INR",
-            name: "NAPA SMP Ranks",
-            description: `Unlock ${product.name} Rank for ${username}`,
-            checkoutUrl: data.order.checkoutUrl,
-            handler: function () {
-              setStep("SUCCESS")
-            }
-          })
-        } catch {
-          // Fall back gracefully to inline modal
-        }
-      }
     } catch (err: any) {
       setError(err.message || "Failed to connect to NAPA Pay")
     } finally {
@@ -309,7 +297,7 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                  <span>Connecting NAPA Pay...</span>
+                  <span>Redirecting to NAPA Pay...</span>
                 </>
               ) : (
                 <>

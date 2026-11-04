@@ -22,10 +22,17 @@ export async function POST(req: Request) {
       )
     }
 
+    let origin: string | undefined
+    try {
+      const headerOrigin = req.headers.get("origin") || req.headers.get("referer")
+      if (headerOrigin) origin = new URL(headerOrigin).origin
+    } catch {}
+
     const order = await createYoupiOrder({
       username: username.trim(),
       rankId: rankId.trim(),
-      customerPhone: typeof customerPhone === "string" ? customerPhone.trim() : undefined
+      customerPhone: typeof customerPhone === "string" ? customerPhone.trim() : undefined,
+      origin
     })
 
     return NextResponse.json({

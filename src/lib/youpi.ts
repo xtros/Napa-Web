@@ -95,6 +95,7 @@ export async function createYoupiOrder(params: {
   username: string
   rankId: string
   customerPhone?: string
+  origin?: string
 }): Promise<YoupiOrder> {
   const config = getYoupiConfig()
   const username = params.username.trim()
@@ -124,6 +125,7 @@ export async function createYoupiOrder(params: {
 
   // Attempt to create session via YouPI PG Payment API
   try {
+    const baseReturnUrl = (params.origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "")
     const res = await fetch(`${config.apiUrl}/api/v1/payments`, {
       method: "POST",
       headers: {
@@ -135,7 +137,7 @@ export async function createYoupiOrder(params: {
         orderId,
         amount: `${amount}.00`,
         currency: "INR",
-        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/order-status?order_id=${orderId}`,
+        returnUrl: `${baseReturnUrl}/order-status?order_id=${orderId}`,
         autoActivate: true,
         customer: {
           fullName: username,
