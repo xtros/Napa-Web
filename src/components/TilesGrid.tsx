@@ -42,7 +42,7 @@ export default function TilesGrid({
 }) {
   return (
     <section className="tiles-grid grid gap-6">
-      {tiles.map((tile) => {
+      {tiles.map((tile, index) => {
         // Render dynamic Server Status tile for live telemetry and player list
         if (tile.id === "server-status") {
           return (
@@ -55,6 +55,7 @@ export default function TilesGrid({
           )
         }
 
+        const isHero = index === 0 || tile.id === "home"
         const artKey = (tile.artSize ?? tile.size) as ArtSize
         const badgeText = highlightBadge?.tileId === tile.id ? highlightBadge.text : tile.badge
         const content = (
@@ -74,6 +75,8 @@ export default function TilesGrid({
                   src={tile.backgroundImage.src}
                   alt={tile.backgroundImage.alt ?? ""}
                   fill
+                  priority={isHero}
+                  loading={isHero ? "eager" : "lazy"}
                   className="tile-bg-image"
                   sizes="(min-width: 1024px) 640px, 100vw"
                 />
@@ -96,6 +99,8 @@ export default function TilesGrid({
                   src={tile.image.src}
                   alt={tile.image.alt}
                   fill
+                  priority={isHero}
+                  loading={isHero ? "eager" : "lazy"}
                   className="tile-image"
                   sizes="(min-width: 1024px) 220px, 160px"
                 />
