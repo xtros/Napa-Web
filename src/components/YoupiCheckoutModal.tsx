@@ -491,22 +491,32 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
               <strong>{product.weeklySalary}</strong> have been credited to player <strong>{order.username}</strong>!
             </div>
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="ghost-button flex-1 text-xs uppercase tracking-widest"
-                onClick={onClose}
-              >
-                Close
-              </button>
+            <div className="flex flex-col gap-2 pt-1">
               <a
-                href="https://dsc.gg/napa"
+                href={`/order-status?order_id=${order.orderId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="primary-button flex-1 text-xs uppercase tracking-widest text-center"
+                className="primary-button text-xs uppercase tracking-widest text-center py-2.5 flex items-center justify-center gap-2"
               >
-                Join Discord
+                <span>📄</span> Download / Print Receipt
               </a>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="ghost-button flex-1 text-xs uppercase tracking-widest py-2"
+                  onClick={onClose}
+                >
+                  Close
+                </button>
+                <a
+                  href="https://dsc.gg/napa"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ghost-button flex-1 text-xs uppercase tracking-widest text-center py-2 text-purple-300 hover:text-white"
+                >
+                  Join Discord
+                </a>
+              </div>
             </div>
           </div>
         )}
