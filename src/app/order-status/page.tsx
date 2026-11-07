@@ -13,6 +13,9 @@ function OrderStatusContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [phoneInput, setPhoneInput] = useState("")
+  const [sendingReceipt, setSendingReceipt] = useState(false)
+  const [receiptNotice, setReceiptNotice] = useState<string | null>(null)
   const receiptRef = useRef<HTMLDivElement>(null)
 
   const fetchStatus = async (id: string) => {
@@ -26,6 +29,9 @@ function OrderStatusContent() {
         throw new Error(data.error || "Order not found")
       }
       setOrder(data.order)
+      if (data.order?.customerPhone) {
+        setPhoneInput(data.order.customerPhone)
+      }
     } catch (err: any) {
       setError(err.message || "Failed to load order status")
       setOrder(null)
@@ -47,6 +53,47 @@ function OrderStatusContent() {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleSendReceiptToPhone = async (channel: "whatsapp" | "sms") => {
+    if (!order) return
+    const cleanPhone = phoneInput.trim().replace(/\D/g, "").slice(-10)
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setReceiptNotice("⚠️ Please enter a valid 10-digit mobile number.")
+      return
+    }
+
+    setSendingReceipt(true)
+    setReceiptNotice(null)
+    try {
+      const res = await fetch("/api/payment/send-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.orderId,
+          phone: cleanPhone
+        })
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to dispatch receipt")
+      }
+
+      if (channel === "whatsapp" && data.whatsappUrl) {
+        window.open(data.whatsappUrl, "_blank")
+        setReceiptNotice(`✓ Receipt opened in WhatsApp for +91 ${cleanPhone}!`)
+      } else if (channel === "sms" && data.smsUrl) {
+        window.location.href = data.smsUrl
+        setReceiptNotice(`✓ Opening SMS composer for +91 ${cleanPhone}!`)
+      } else {
+        setReceiptNotice(`✓ Receipt processed for +91 ${cleanPhone}!`)
+      }
+    } catch (err: any) {
+      setReceiptNotice(`⚠️ ${err.message || "Failed to send receipt."}`)
+    } finally {
+      setSendingReceipt(false)
+    }
   }
 
   const handleCopyReceipt = () => {
@@ -311,6 +358,58 @@ Discord Support: https://dsc.gg/napa
               <div className="flex-shrink-0 text-center border-2 border-emerald-500/40 print:border-black rounded-lg px-3 py-1 font-mono text-[10px] font-extrabold uppercase tracking-widest text-emerald-300 print:text-black rotate-[-2deg]">
                 OFFICIAL RECEIPT • PAID
               </div>
+            </div>
+
+            {/* Direct Phone Dispatch (WhatsApp & SMS) - Hidden when printing */}
+            <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-4 space-y-3 print:hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                <div className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                  <span>📱</span> Send Receipt to Phone Number
+                </div>
+                <span className="text-[11px] text-white/50">Instant delivery via WhatsApp & SMS</span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-xs text-white/50 font-mono">
+                    +91
+                  </div>
+                  <input
+                    type="tel"
+                    className="input-field pl-10 text-xs font-mono w-full"
+                    placeholder="Enter 10-digit mobile number"
+                    maxLength={10}
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSendReceiptToPhone("whatsapp")}
+                    disabled={sendingReceipt || !phoneInput}
+                    className="primary-button text-xs uppercase tracking-wider px-3.5 py-2.5 flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-black font-bold disabled:opacity-50"
+                  >
+                    <span>💬</span> WhatsApp
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSendReceiptToPhone("sms")}
+                    disabled={sendingReceipt || !phoneInput}
+                    className="ghost-button text-xs uppercase tracking-wider px-3.5 py-2.5 flex items-center justify-center gap-1.5 text-white hover:text-purple-300 disabled:opacity-50"
+                  >
+                    <span>✉️</span> SMS
+                  </button>
+                </div>
+              </div>
+
+              {receiptNotice && (
+                <div className={`text-[11px] ${receiptNotice.startsWith("✓") ? "text-emerald-400 font-semibold" : "text-amber-300"}`}>
+                  {receiptNotice}
+                </div>
+              )}
             </div>
 
             {/* Action Bar - Hidden when printing */}

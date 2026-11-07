@@ -22,6 +22,8 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
   const [utrMessage, setUtrMessage] = useState<string | null>(null)
   const [copiedVpa, setCopiedVpa] = useState(false)
   const [timeLeft, setTimeLeft] = useState(300) // 5 minutes
+  const [receiptSentStatus, setReceiptSentStatus] = useState<string | null>(null)
+  const [sendingPhoneReceipt, setSendingPhoneReceipt] = useState(false)
 
   // Reset state when opened with a new product
   useEffect(() => {
@@ -35,8 +37,53 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
       setUtrMessage(null)
       setCopiedVpa(false)
       setTimeLeft(300)
+      setReceiptSentStatus(null)
+      setSendingPhoneReceipt(false)
     }
   }, [open, product])
+
+  const handleDispatchPhoneReceipt = async (channel: "whatsapp" | "sms", targetPhone?: string) => {
+    if (!order) return
+    const rawNumber = targetPhone || phone || order.customerPhone || ""
+    const clean = rawNumber.replace(/\D/g, "").slice(-10)
+    if (!clean || clean.length !== 10) {
+      setReceiptSentStatus("⚠️ Please enter a valid 10-digit mobile number.")
+      return
+    }
+
+    setSendingPhoneReceipt(true)
+    setReceiptSentStatus(null)
+
+    try {
+      const res = await fetch("/api/payment/send-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.orderId,
+          phone: clean
+        })
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to process receipt")
+      }
+
+      if (channel === "whatsapp" && data.whatsappUrl) {
+        window.open(data.whatsappUrl, "_blank")
+        setReceiptSentStatus(`✓ Receipt opened in WhatsApp (+91 ${clean})!`)
+      } else if (channel === "sms" && data.smsUrl) {
+        window.location.href = data.smsUrl
+        setReceiptSentStatus(`✓ Opening SMS composer for +91 ${clean}!`)
+      } else {
+        setReceiptSentStatus(`✓ Receipt sent to +91 ${clean}!`)
+      }
+    } catch (e: any) {
+      setReceiptSentStatus(`⚠️ ${e.message || "Failed to send receipt"}`)
+    } finally {
+      setSendingPhoneReceipt(false)
+    }
+  }
 
   // Countdown timer for active checkout session
   useEffect(() => {
@@ -275,15 +322,25 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
 
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-widest text-white/70 flex items-center justify-between">
-                <span>Mobile Number (Optional for WhatsApp Receipt):</span>
+                <span>Mobile Number (For WhatsApp & SMS Receipt):</span>
+                <span className="text-[10px] text-emerald-400 font-normal">Direct Receipt</span>
               </label>
-              <input
-                className="input-field"
-                placeholder="e.g. 9876543210"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-xs text-white/50 font-mono">
+                  +91
+                </div>
+                <input
+                  className="input-field pl-10 font-mono text-sm"
+                  placeholder="e.g. 9876543210"
+                  type="tel"
+                  maxLength={10}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                />
+              </div>
+              <span className="text-[11px] text-white/50 block">
+                Your official purchase receipt and in-game activation notice will be sent here.
+              </span>
             </div>
 
             <button
@@ -489,6 +546,54 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald text-left">
               ✓ In-game bonus of <strong>{product.joiningBonus}</strong> and weekly salary of{" "}
               <strong>{product.weeklySalary}</strong> have been credited to player <strong>{order.username}</strong>!
+            </div>
+
+            {/* Direct Phone Dispatch Block */}
+            <div className="rounded-xl border border-purple-500/30 bg-purple-950/30 p-3 space-y-2 text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                  <span>📱</span> Receipt to Mobile Number
+                </span>
+                <span className="text-[10px] text-white/50">WhatsApp / SMS</span>
+              </div>
+
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-xs text-white/50 font-mono">
+                    +91
+                  </div>
+                  <input
+                    type="tel"
+                    className="input-field pl-9 text-xs font-mono w-full py-1.5"
+                    placeholder="10-digit mobile number"
+                    maxLength={10}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDispatchPhoneReceipt("whatsapp")}
+                  disabled={sendingPhoneReceipt || !phone}
+                  className="primary-button text-xs uppercase px-3 py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-black font-bold flex items-center gap-1 disabled:opacity-50"
+                >
+                  <span>💬</span> WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDispatchPhoneReceipt("sms")}
+                  disabled={sendingPhoneReceipt || !phone}
+                  className="ghost-button text-xs uppercase px-3 py-1.5 text-white hover:text-purple-300 flex items-center gap-1 disabled:opacity-50"
+                >
+                  <span>✉️</span> SMS
+                </button>
+              </div>
+
+              {receiptSentStatus && (
+                <div className={`text-[11px] ${receiptSentStatus.startsWith("✓") ? "text-emerald-400 font-semibold" : "text-amber-300"}`}>
+                  {receiptSentStatus}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-2 pt-1">

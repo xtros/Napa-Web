@@ -264,6 +264,24 @@ export function updateYoupiOrderStatus(
   if (patch.utr) order.utr = patch.utr
   if (patch.verifiedBy) order.verifiedBy = patch.verifiedBy
   if (patch.verificationNote) order.verificationNote = patch.verificationNote
+  if (patch.customerPhone) order.customerPhone = patch.customerPhone
+  order.updatedAt = new Date().toISOString()
+  saveOrders(orders)
+
+  return order
+}
+
+/**
+ * Updates or attaches the customer's phone number to an order
+ */
+export function updateYoupiOrderCustomerPhone(orderId: string, phone: string): YoupiOrder {
+  const orders = loadOrders()
+  const order = orders[orderId]
+  if (!order) {
+    throw new Error(`Order ${orderId} not found`)
+  }
+
+  order.customerPhone = phone.trim()
   order.updatedAt = new Date().toISOString()
   saveOrders(orders)
 
