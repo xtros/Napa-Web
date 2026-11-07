@@ -5,6 +5,7 @@ import {
   updateYoupiOrderStatus,
   getYoupiConfig
 } from "@/lib/youpi"
+import { formatReceiptText } from "@/lib/receipt"
 
 export const dynamic = "force-dynamic"
 
@@ -45,6 +46,33 @@ export async function GET(req: Request) {
             order = updateYoupiOrderStatus(order.orderId, "COMPLETED", {
               utr: gwData.utr || order.utr || undefined
             })
+
+            // Automatically dispatch WhatsApp receipt to buyer's phone number if not yet sent
+            if (order.customerPhone && !order.receiptSentAt) {
+              try {
+                let origin: string | undefined
+                try {
+                  const headerOrigin = req.headers.get("origin") || req.headers.get("referer")
+                  if (headerOrigin) origin = new URL(headerOrigin).origin
+                } catch {}
+                const receiptText = formatReceiptText(order, { origin })
+                fetch(`${config.apiUrl}/api/v1/payments/${order.paymentId}/send-receipt`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-Merchant-Key": config.merchantKey
+                  },
+                  body: JSON.stringify({
+                    phone: order.customerPhone,
+                    message: receiptText
+                  }),
+                  signal: AbortSignal.timeout(3000)
+                }).catch(() => {})
+                order = updateYoupiOrderStatus(order.orderId, "COMPLETED", {
+                  receiptSentAt: new Date().toISOString()
+                })
+              } catch {}
+            }
           } else if (gwData.status === "MANUAL_REVIEW" && order.status !== "MANUAL_REVIEW") {
             order = updateYoupiOrderStatus(order.orderId, "MANUAL_REVIEW", {
               utr: gwData.utr || order.utr || undefined

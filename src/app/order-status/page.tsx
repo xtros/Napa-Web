@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import PageShell from "@/components/PageShell"
 import { YoupiOrder } from "@/lib/youpi"
+import NapaGraphicReceipt from "@/components/NapaGraphicReceipt"
 
 function OrderStatusContent() {
   const searchParams = useSearchParams()
@@ -202,12 +203,24 @@ Discord Support: https://dsc.gg/napa
         <div className="space-y-6">
           {/* Status Alert Banner - Hidden on Print */}
           {order.status === "COMPLETED" && (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs text-emerald text-center space-y-1 print:hidden shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-              <div className="font-bold text-sm flex items-center justify-center gap-1.5">
-                <span>✓</span> Payment Verified & Perks Provisioned!
+            <>
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs text-emerald text-center space-y-1 print:hidden shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                <div className="font-bold text-sm flex items-center justify-center gap-1.5">
+                  <span>✓</span> Payment Verified & Perks Provisioned!
+                </div>
+                <div>Perks are live for <strong>{order.username}</strong> on <code>play.napasmp.fun</code>. Your official receipt is ready below.</div>
               </div>
-              <div>Perks are live for <strong>{order.username}</strong> on <code>play.napasmp.fun</code>. Your official receipt is ready below.</div>
-            </div>
+
+              {/* Graphical Minecraft Template Receipt */}
+              <div className="py-2">
+                <NapaGraphicReceipt
+                  order={order}
+                  onSendWhatsApp={() => handleSendReceiptToPhone("whatsapp")}
+                  isSendingWhatsApp={sendingReceipt}
+                  whatsappNotice={receiptNotice}
+                />
+              </div>
+            </>
           )}
 
           {order.status === "MANUAL_REVIEW" && (

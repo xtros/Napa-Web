@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { RankProduct } from "@/data/siteConfig"
 import { YoupiOrder } from "@/lib/youpi"
+import NapaGraphicReceipt from "@/components/NapaGraphicReceipt"
 
 interface YoupiCheckoutModalProps {
   product: RankProduct | null
@@ -84,6 +85,13 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
       setSendingPhoneReceipt(false)
     }
   }
+
+  // Automatically trigger WhatsApp receipt dispatch when entering SUCCESS step if phone exists
+  useEffect(() => {
+    if (step === "SUCCESS" && order && (phone || order.customerPhone) && !order.receiptSentAt) {
+      handleDispatchPhoneReceipt("whatsapp", phone || order.customerPhone)
+    }
+  }, [step, order, phone])
 
   // Countdown timer for active checkout session
   useEffect(() => {
@@ -548,52 +556,14 @@ export default function YoupiCheckoutModal({ product, open, onClose }: YoupiChec
               <strong>{product.weeklySalary}</strong> have been credited to player <strong>{order.username}</strong>!
             </div>
 
-            {/* Direct Phone Dispatch Block */}
-            <div className="rounded-xl border border-purple-500/30 bg-purple-950/30 p-3 space-y-2 text-left">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
-                  <span>📱</span> Receipt to Mobile Number
-                </span>
-                <span className="text-[10px] text-white/50">WhatsApp / SMS</span>
-              </div>
-
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-xs text-white/50 font-mono">
-                    +91
-                  </div>
-                  <input
-                    type="tel"
-                    className="input-field pl-9 text-xs font-mono w-full py-1.5"
-                    placeholder="10-digit mobile number"
-                    maxLength={10}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleDispatchPhoneReceipt("whatsapp")}
-                  disabled={sendingPhoneReceipt || !phone}
-                  className="primary-button text-xs uppercase px-3 py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-black font-bold flex items-center gap-1 disabled:opacity-50"
-                >
-                  <span>💬</span> WhatsApp
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDispatchPhoneReceipt("sms")}
-                  disabled={sendingPhoneReceipt || !phone}
-                  className="ghost-button text-xs uppercase px-3 py-1.5 text-white hover:text-purple-300 flex items-center gap-1 disabled:opacity-50"
-                >
-                  <span>✉️</span> SMS
-                </button>
-              </div>
-
-              {receiptSentStatus && (
-                <div className={`text-[11px] ${receiptSentStatus.startsWith("✓") ? "text-emerald-400 font-semibold" : "text-amber-300"}`}>
-                  {receiptSentStatus}
-                </div>
-              )}
+            {/* Minecraft Graphical Receipt Card */}
+            <div className="py-1">
+              <NapaGraphicReceipt
+                order={order}
+                onSendWhatsApp={() => handleDispatchPhoneReceipt("whatsapp", phone || order.customerPhone)}
+                isSendingWhatsApp={sendingPhoneReceipt}
+                whatsappNotice={receiptSentStatus}
+              />
             </div>
 
             <div className="flex flex-col gap-2 pt-1">

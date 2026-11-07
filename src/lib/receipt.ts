@@ -18,7 +18,7 @@ export function formatDisplayPhone(rawPhone: string): string {
 }
 
 /**
- * Builds the official receipt text message suitable for WhatsApp and SMS
+ * Builds the official receipt text message matching the exact graphical template
  */
 export function formatReceiptText(order: YoupiOrder, options?: { origin?: string }): string {
   const origin = (
@@ -28,32 +28,43 @@ export function formatReceiptText(order: YoupiOrder, options?: { origin?: string
   ).replace(/\/$/, "")
 
   const receiptUrl = `${origin}/order-status?order_id=${encodeURIComponent(order.orderId)}`
-  const dateStr = new Date(order.updatedAt || order.createdAt).toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    dateStyle: "medium",
-    timeStyle: "short"
+  const formattedDate = new Date(order.updatedAt || order.createdAt).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
   })
 
-  return `🧾 *NAPA SMP — OFFICIAL PURCHASE RECEIPT*
-━━━━━━━━━━━━━━━━━━━━━━
-• *Receipt No:* REC-${order.orderId}
-• *Order ID:* ${order.orderId}
-• *Date:* ${dateStr}
-• *Player Username:* ${order.username}
-• *Purchased Tier:* ${order.rankName} Rank
-• *Amount Paid:* INR ₹${order.amount}.00
-• *Payment Method:* UPI Instant Settlement (Zero Fee)
-• *Bank UTR / Ref:* ${order.utr || "Verified Auto-Credit"}
-• *Payment Status:* COMPLETED & VERIFIED ✓
-• *Minecraft Server:* play.napasmp.fun
-━━━━━━━━━━━━━━━━━━━━━━
-📄 *Download / View Printable Receipt:*
+  return `🎮 *NAPA MINECRAFT NETWORK*
+═══════ *RECEIPT* ═══════
+*THANK YOU FOR PURCHASING OUR MINECRAFT PLAN!*
+✦ *NAPANETWORK.IN* ✦
+
+★★★★★★★★★★★★★★★★★★★★★★
+*ORDER ID:*  #${order.orderId}
+*DATE:*      ${formattedDate.toUpperCase()}
+*PLAYER:*    ${order.username}
+★★★★★★★★★★★★★★★★★★★★★★
+
+*PLAN DETAILS*                          *AMOUNT*
+*Minecraft Server Plan*                 *₹${order.amount}.00*
+(${order.rankName} Rank Tier • Permanent)
+
+────────────────────────
+*TOTAL:*                             *₹${order.amount}.00*
+────────────────────────
+
+✅ *Your purchase was successful!*
+*Enjoy your Minecraft experience with NAPA!*
+
+*PLAY  ♦  BUILD  ♦  EXPLORE*
+
+📄 *Download / View Your Graphic Receipt:*
 ${receiptUrl}
 
-🎮 *Activation Status:* All in-game perks, bonus multipliers, and weekly salary are active on play.napasmp.fun!
-💬 *Discord Support:* https://dsc.gg/napa
-━━━━━━━━━━━━━━━━━━━━━━
-Thank you for supporting NAPA SMP!`
+• *Server IP:* play.napasmp.fun
+• *Bank UTR:* ${order.utr || "Auto-Verified"}
+• *Discord Community:* https://dsc.gg/napa
+════════════════════════`
 }
 
 /**
@@ -65,7 +76,6 @@ export function getWhatsAppReceiptUrl(rawPhone: string, receiptText: string): st
   if (clean && clean.length === 10) {
     return `https://wa.me/91${clean}?text=${encoded}`
   }
-  // Generic WhatsApp share if no valid phone provided
   return `https://wa.me/?text=${encoded}`
 }
 
@@ -80,4 +90,3 @@ export function getSmsReceiptUrl(rawPhone: string, receiptText: string): string 
   }
   return `sms:?body=${encoded}`
 }
-

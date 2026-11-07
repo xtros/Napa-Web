@@ -3,8 +3,10 @@ import {
   verifyYoupiWebhookSignature,
   getYoupiOrder,
   getYoupiOrderByPaymentId,
-  updateYoupiOrderStatus
+  updateYoupiOrderStatus,
+  getYoupiConfig
 } from "@/lib/youpi"
+import { formatReceiptText } from "@/lib/receipt"
 
 export const dynamic = "force-dynamic"
 
@@ -47,11 +49,34 @@ export async function POST(req: Request) {
       status === "SUCCESS" ||
       status === "OBSERVED_SUCCESS"
     ) {
-      updateYoupiOrderStatus(order.orderId, "COMPLETED", {
+      order = updateYoupiOrderStatus(order.orderId, "COMPLETED", {
         utr: utr || undefined,
         verificationNote: `Auto-verified via YouPI PG Webhook (${event || status})`
       })
       console.log(`[YouPI PG] Order ${order.orderId} COMPLETED for player ${order.username}!`)
+
+      // Auto-dispatch receipt to WhatsApp
+      if (order.customerPhone && !order.receiptSentAt) {
+        try {
+          const config = getYoupiConfig()
+          const receiptText = formatReceiptText(order)
+          fetch(`${config.apiUrl}/api/v1/payments/${order.paymentId}/send-receipt`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Merchant-Key": config.merchantKey
+            },
+            body: JSON.stringify({
+              phone: order.customerPhone,
+              message: receiptText
+            }),
+            signal: AbortSignal.timeout(3000)
+          }).catch(() => {})
+          updateYoupiOrderStatus(order.orderId, "COMPLETED", {
+            receiptSentAt: new Date().toISOString()
+          })
+        } catch {}
+      }
     } else if (event === "MANUAL_REVIEW" || status === "MANUAL_REVIEW") {
       updateYoupiOrderStatus(order.orderId, "MANUAL_REVIEW", {
         utr: utr || undefined,

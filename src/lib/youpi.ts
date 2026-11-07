@@ -30,6 +30,7 @@ export type YoupiOrder = {
   qrSvg: string
   payeeVpa: string
   customerPhone?: string
+  receiptSentAt?: string
   verifiedBy?: string
   verificationNote?: string
   createdAt: string
@@ -265,6 +266,7 @@ export function updateYoupiOrderStatus(
   if (patch.verifiedBy) order.verifiedBy = patch.verifiedBy
   if (patch.verificationNote) order.verificationNote = patch.verificationNote
   if (patch.customerPhone) order.customerPhone = patch.customerPhone
+  if (patch.receiptSentAt) order.receiptSentAt = patch.receiptSentAt
   order.updatedAt = new Date().toISOString()
   saveOrders(orders)
 
