@@ -23,6 +23,20 @@ export default function RanksPage() {
             <p className="mt-2 text-sm sm:text-base text-white text-opacity-80 leading-relaxed">
               {siteConfig.ranks.description}
             </p>
+            <div className="mt-4 flex flex-wrap gap-2.5">
+              <a
+                href="/receipts"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-900/60 hover:bg-purple-800/80 border border-purple-400/30 text-xs font-bold uppercase tracking-wider text-purple-200 transition-colors shadow-sm"
+              >
+                <span>🧾</span> View Plan Receipt Templates
+              </a>
+              <a
+                href="/order-status"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-midnight/80 hover:bg-midnight border border-white/10 text-xs font-bold uppercase tracking-wider text-white/80 hover:text-white transition-colors"
+              >
+                <span>🔍</span> Track Order & Receipt
+              </a>
+            </div>
           </div>
           <div className="tile-art tile-art-md" aria-hidden="true" />
         </div>

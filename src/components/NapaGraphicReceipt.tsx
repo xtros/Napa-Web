@@ -11,6 +11,58 @@ interface NapaGraphicReceiptProps {
   whatsappNotice?: string | null
 }
 
+const PLAN_THEMES: Record<string, {
+  title: string
+  sub: string
+  icon: string
+  badgeText: string
+  badgeClass: string
+  gradient: string
+  boxShadow: string
+  templatePath: string
+}> = {
+  vip: {
+    title: "VIP Server Plan",
+    sub: "Starter Tier • Permanent (+10% Boost • $1.5K/wk)",
+    icon: "🟩",
+    badgeText: "STARTER",
+    badgeClass: "bg-emerald-950/60 text-emerald-300 border-emerald-500/30",
+    gradient: "from-[#8b5cf6] to-[#6d28d9]",
+    boxShadow: "rgba(139,92,246,0.6)",
+    templatePath: "/images/templates/receipt-template-vip.png"
+  },
+  mvp: {
+    title: "MVP Server Plan",
+    sub: "Popular Tier • Permanent (+20% Boost • $4K/wk)",
+    icon: "💎",
+    badgeText: "POPULAR",
+    badgeClass: "bg-sky-950/60 text-sky-300 border-sky-500/30",
+    gradient: "from-[#38bdf8] to-[#6366f1]",
+    boxShadow: "rgba(56,189,248,0.6)",
+    templatePath: "/images/templates/receipt-template-mvp.png"
+  },
+  elite: {
+    title: "ELITE Server Plan",
+    sub: "Best Value Tier • Permanent (+35% Boost • $8.5K/wk)",
+    icon: "👑",
+    badgeText: "BEST VALUE",
+    badgeClass: "bg-amber-950/60 text-amber-300 border-amber-500/30",
+    gradient: "from-[#f59e0b] to-[#d946ef]",
+    boxShadow: "rgba(245,158,11,0.6)",
+    templatePath: "/images/templates/receipt-template-elite.png"
+  },
+  creator: {
+    title: "CREATOR Partner Plan",
+    sub: "Streamer Tier • Official Partner Perks",
+    icon: "⭐",
+    badgeText: "PARTNER",
+    badgeClass: "bg-red-950/60 text-red-300 border-red-500/30",
+    gradient: "from-[#ef4444] to-[#8b5cf6]",
+    boxShadow: "rgba(239,68,68,0.6)",
+    templatePath: "/images/templates/receipt-template-creator.png"
+  }
+}
+
 export default function NapaGraphicReceipt({
   order,
   onSendWhatsApp,
@@ -20,18 +72,21 @@ export default function NapaGraphicReceipt({
   const [downloadingImg, setDownloadingImg] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
+  const planKey = (order.rankId || "vip").toLowerCase()
+  const theme = PLAN_THEMES[planKey] || PLAN_THEMES.vip
+
   const formattedDate = new Date(order.updatedAt || order.createdAt).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric"
   })
 
-  // Generate PNG file from canvas overlaying the template image
+  // Generate PNG file from canvas overlaying the specific plan template
   const handleDownloadImage = () => {
     setDownloadingImg(true)
     const img = new Image()
     img.crossOrigin = "anonymous"
-    img.src = "/images/receipt-template.jpg"
+    img.src = theme.templatePath
 
     img.onload = () => {
       const canvas = canvasRef.current || document.createElement("canvas")
@@ -43,7 +98,7 @@ export default function NapaGraphicReceipt({
         return
       }
 
-      // 1. Draw base template image
+      // 1. Draw base plan template image
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
 
       // 2. Patch & Overwrite ORDER ID
@@ -59,60 +114,22 @@ export default function NapaGraphicReceipt({
       ctx.font = "bold 20px 'Courier New', monospace"
       ctx.fillText(formattedDate.toUpperCase(), 705, 452)
 
-      // 4. Patch & Overwrite Item Plan Details
-      ctx.fillRect(195, 532, 380, 52)
-      ctx.fillStyle = "#160e2b"
-      ctx.font = "bold 23px sans-serif"
-      ctx.textAlign = "left"
-      ctx.fillText(`${order.rankName} Rank Tier`, 200, 554)
+      // 4. If promotional or custom price differs from default
+      if (order.amount) {
+        ctx.fillStyle = "#f6f6f8"
+        ctx.fillRect(580, 532, 130, 36)
+        ctx.fillStyle = "#160e2b"
+        ctx.font = "bold 24px sans-serif"
+        ctx.textAlign = "right"
+        ctx.fillText(`₹${order.amount}.00`, 705, 557)
+      }
 
-      ctx.fillStyle = "#63587d"
-      ctx.font = "bold 15px sans-serif"
-      ctx.fillText(`(Player: ${order.username} • Permanent)`, 200, 577)
-
-      // 5. Patch & Overwrite Item Amount
-      ctx.fillStyle = "#f6f6f8"
-      ctx.fillRect(590, 532, 120, 35)
-      ctx.fillStyle = "#160e2b"
-      ctx.font = "bold 24px sans-serif"
-      ctx.textAlign = "right"
-      ctx.fillText(`₹${order.amount}.00`, 705, 557)
-
-      // 6. Patch & Overwrite Total Badge
-      // Draw neon purple rounded rectangle
-      const bx = 475, by = 615, bw = 235, bh = 56, br = 28
-      ctx.save()
-      ctx.fillStyle = "#6b21a8"
-      ctx.shadowColor = "#a855f7"
-      ctx.shadowBlur = 18
-      ctx.beginPath()
-      ctx.roundRect ? ctx.roundRect(bx, by, bw, bh, br) : ctx.rect(bx, by, bw, bh)
-      ctx.fill()
-      ctx.restore()
-
-      // Gradient inside badge
-      const grad = ctx.createLinearGradient(bx, by, bx + bw, by + bh)
-      grad.addColorStop(0, "#8b5cf6")
-      grad.addColorStop(1, "#6d28d9")
-      ctx.fillStyle = grad
-      ctx.beginPath()
-      ctx.roundRect ? ctx.roundRect(bx + 2, by + 2, bw - 4, bh - 4, br - 2) : ctx.rect(bx + 2, by + 2, bw - 4, bh - 4)
-      ctx.fill()
-
-      // Total Text inside badge
-      ctx.fillStyle = "#ffffff"
-      ctx.font = "900 32px sans-serif"
-      ctx.textAlign = "center"
-      ctx.shadowColor = "rgba(0,0,0,0.4)"
-      ctx.shadowBlur = 6
-      ctx.fillText(`₹${order.amount}.00`, bx + bw / 2, by + 39)
-
-      // 7. Trigger instant file download
+      // 5. Trigger instant file download
       try {
         const dataUrl = canvas.toDataURL("image/png")
         const a = document.createElement("a")
         a.href = dataUrl
-        a.download = `NAPA-Receipt-${order.orderId}.png`
+        a.download = `NAPA-Receipt-${planKey.toUpperCase()}-${order.orderId}.png`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -167,9 +184,12 @@ export default function NapaGraphicReceipt({
               Thank you for purchasing our Minecraft plan!
             </p>
 
-            <div className="pt-1">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#3b126d] text-white text-[10px] sm:text-xs font-black tracking-widest shadow-md">
+            <div className="pt-1 flex items-center justify-center gap-2">
+              <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[#3b126d] text-white text-[10px] sm:text-xs font-black tracking-widest shadow-md">
                 <span>✦</span> NAPANETWORK.IN <span>✦</span>
+              </span>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase tracking-wider ${theme.badgeClass}`}>
+                {theme.badgeText}
               </span>
             </div>
           </div>
@@ -211,35 +231,38 @@ export default function NapaGraphicReceipt({
           {/* Item Row */}
           <div className="flex items-center justify-between py-2.5 px-1">
             <div className="flex items-center gap-2.5">
-              {/* Minecraft Grass Block Icon */}
-              <div className="w-10 h-10 rounded bg-[#5b8c32] border-2 border-[#385e1b] flex items-center justify-center text-white text-lg shadow-sm flex-shrink-0">
-                🟩
+              {/* Minecraft Plan Icon */}
+              <div className="w-10 h-10 rounded bg-[#2a1352] border border-purple-500/30 flex items-center justify-center text-white text-lg shadow-sm flex-shrink-0">
+                {theme.icon}
               </div>
               <div>
                 <div className="font-extrabold text-sm sm:text-base text-[#1b1035] leading-snug">
-                  {order.rankName} Rank Tier
+                  {theme.title}
                 </div>
                 <div className="text-[10px] sm:text-[11px] text-[#63557e] font-medium">
-                  (Duration: Permanent • In-Game Perks)
+                  {theme.sub}
                 </div>
               </div>
             </div>
 
             <div className="font-extrabold text-base sm:text-lg text-[#1b1035] font-mono">
-              ₹{order.amount}.00
+              {planKey === "creator" ? "PARTNER" : `₹${order.amount}.00`}
             </div>
           </div>
 
           {/* Dashed Separator */}
           <div className="border-b-2 border-dashed border-[#2d0e59]/30 my-3" />
 
-          {/* Total Row with Glowing Purple Badge */}
+          {/* Total Row with Plan-Themed Gradient Badge */}
           <div className="flex justify-between items-center py-1">
             <span className="font-black text-xl sm:text-2xl text-[#1e1038] tracking-wider">
               TOTAL:
             </span>
-            <div className="px-5 py-2 rounded-full bg-gradient-to-r from-[#8b5cf6] to-[#6d28d9] text-white font-black text-xl sm:text-2xl tracking-wide shadow-[0_0_20px_rgba(139,92,246,0.6)]">
-              ₹{order.amount}.00
+            <div
+              className={`px-5 py-2 rounded-full bg-gradient-to-r ${theme.gradient} text-white font-black text-xl sm:text-2xl tracking-wide shadow-lg`}
+              style={{ boxShadow: `0 0 20px ${theme.boxShadow}` }}
+            >
+              {planKey === "creator" ? "PARTNER" : `₹${order.amount}.00`}
             </div>
           </div>
 
